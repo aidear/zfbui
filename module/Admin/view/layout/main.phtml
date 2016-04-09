@@ -5,8 +5,8 @@
    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
    <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/favicon.ico'))
                         ->prependStylesheet($this->basePath() . '/assets/css/main-min.css')
-                        ->prependStylesheet($this->basePath() . 'assets/css/bui-min.css')
-                        ->prependStylesheet($this->basePath() . 'assets/css/dpl-min.css') ?>
+                        ->prependStylesheet($this->basePath() . '/assets/css/bui-min.css')
+                        ->prependStylesheet($this->basePath() . '/assets/css/dpl-min.css') ?>
  </head>
  <body>
 
@@ -46,10 +46,10 @@
           id:'menu', 
           homePage : 'code',
           menu:[{
-              text:'首页内容',
+              text:'帐号权限',
               items:[
-                {id:'code',text:'首页代码',href:'main/code.html',closeable : false},
-                {id:'main-menu',text:'顶部导航',href:'main/menu.html'},
+                {id:'code',text:'角色管理',href:'<?php echo $this->url('admin/default', array('controller' => 'role', 'action' => 'index'));?>',closeable : false},
+                {id:'main-menu',text:'顶部导航',href:'/role'},
                 {id:'second-menu',text:'右边菜单',href:'main/second-menu.html'},
                 {id:'dyna-menu',text:'动态菜单',href:'main/dyna-menu.html'}
               ]

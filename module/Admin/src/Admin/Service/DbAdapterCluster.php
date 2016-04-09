@@ -3,7 +3,7 @@ namespace Admin\Service;
 
 use Zend\Db\Adapter\Adapter;
 
-class DbAdapterCluster{
+class DbAdapterCluster {
     
 	protected static $config;
 	protected static $adapters = array();
