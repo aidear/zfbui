@@ -10,4 +10,8 @@ class RoleTable extends DbTable
 		$sql = "SELECT * FROM `sys_role`";
 		return $this->fetchAll($sql);
 	}
+
+	public function checkIsExist($name) {
+		return $this->tableGateway->select(array('Name' => $name))->count();
+	}
 }

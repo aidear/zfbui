@@ -1,5 +1,5 @@
 <div id="content" class="hide">
-      <form id="J_Form" class="form-horizontal" action="<?php echo $this->url('admin' , array('controller' => 'role' , 'action' => 'save'));?>">
+      <form id="J_Form" class="form-horizontal" method="post" action="<?php echo $this->url('admin' , array('controller' => 'role' , 'action' => 'save'));?>">
         <div class="row">
           <div class="control-group span8">
             <label class="control-label"><s>*</s>角色名称</label>
@@ -12,7 +12,7 @@
           <div class="control-group span8">
             <label class="control-label"><s>*</s>角色名称</label>
             <div class="controls">
-              <input name="Name" type="text" data-rules="{required:true}" class="input-normal control-text">
+              <input name="CnName" type="text" data-rules="{required:true}" class="input-normal control-text">
             </div>
           </div>
         </div>
@@ -32,7 +32,7 @@ $ResourceName = '';
         ;?>
 data.push(<?php echo json_encode($role)?>);
 <?php endforeach;?>
-BUI.use(['bui/grid','bui/data'],function (Grid,Data) {
+BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
 
     var columns = [{title : '角色',dataIndex :'Name'},
             {title : '角色别名',dataIndex :'CnName'},
@@ -52,7 +52,38 @@ BUI.use(['bui/grid','bui/data'],function (Grid,Data) {
       }),
       editing = new Grid.Plugins.DialogEditing({
         contentId : 'content',
-        triggerCls : 'btn-edit'
+        triggerCls : 'btn-edit',
+        editor:{
+			success: function() {
+				var edtor = this,form = edtor.get('form'),
+                editType = editing.get('editType');
+				form.valid();
+                if (form.isValid()) {
+                	form.ajaxSubmit({ //表单异步提交
+                        url: '<?php echo $this->url('admin/default' , array('controller' => 'role' , 'action' => 'save'));?>',
+                        method: 'post',
+                        success: function (data) {
+
+                            if (data.code != 0) {
+                                BUI.Message.Alert(data.msg, 'error');
+                            } else {
+                                if (editType == 'add') {
+//                                     store.add(data.Data);
+                                } else {
+                                    record = form.serializeToObject();
+                                    editing.saveRecord(record);
+                                }
+                            	edtor.accept();
+                            }
+
+                        },
+                        error: function () {
+                            BUI.Message.Alert(data.msg, 'error');
+                        }
+                    });
+                }
+			}
+        }
       }),
       grid = new Grid.Grid({
         render : '#grid',
@@ -80,7 +111,6 @@ BUI.use(['bui/grid','bui/data'],function (Grid,Data) {
 
       });
     grid.render();
-
     function addFunction(){
     	var newData = {isNew : true}
       editing.add(newData); //添加记录后，直接编辑
@@ -88,7 +118,17 @@ BUI.use(['bui/grid','bui/data'],function (Grid,Data) {
 
     function delFunction(){
       var selections = grid.getSelection();
-      store.remove(selections);
+      if (selections.length) {
+          var params = [];
+          for (var i in selections) {
+			params.push(selections[i].RoleID);
+          }
+		$.post('<?php echo $this->url('admin/default' , array('controller' => 'role' , 'action' => 'delete'));?>', {RoleID:params}, function(s) {
+			if (s.code == 0) {
+				store.remove(selections);
+			}
+		});
+      }
     }
     var logEl = $('#log');
     $('#btnSave').on('click',function(){

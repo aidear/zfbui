@@ -3,6 +3,7 @@ namespace Admin\Controller;
 
 use Admin\Model\RoleTable;
 use Admin\Model\AclTable;
+use Zend\View\Model\JsonModel;
 class RoleController extends AbstractController
 {
     function indexAction(){
@@ -18,39 +19,19 @@ class RoleController extends AbstractController
     
     function saveAction(){
         $request = $this->getRequest();
-        $form = new RoleForm();
                
         if($request->isPost()){
-            $table = $this->_getRoleTable();
             $params = $request->getPost();
             if (trim($params->Name) == '') {
-            	$this->flashMessenger()->addMessage('角色名不允许为空！');
-            	return $this->redirect()->toRoute('backend', array('controller' => 'role' , 'action' => 'save'));
+            	return new JsonModel(array('code' => -1, 'msg' => '角色名不允许为空！'));
             }
-            $role = new Role();
-            $role->RoleID = $params->RoleID;
-            $role->Name = $params->Name;
-            $role->CnName = $params->CnName;
-            $role->ParentName = $params->ParentName;
-            $role->AddTime = Utilities::getDateTime('Y-m-d h:i:s');
-            if ($table->checkIsExist($role->Name)) {
-            	$this->flashMessenger()->addMessage('角色名称重复，请更换其他名称！');
-            	return $this->redirect()->toRoute('backend', array('controller' => 'role' , 'action' => 'save'));
+            $roleTable = new RoleTable();
+            if ($roleTable->checkIsExist($params->Name)) {
+            	return new JsonModel(array('code' => -2, 'msg' => '角色名称重复，请更换其他名称！'));
             }
-            $table->save($role);
-            
-            if($role->RoleID){
-                $this->trigger(ActionEvent::ACTION_UPDATE);
-            }else{
-                $this->trigger(ActionEvent::ACTION_INSERT);
-            }
-            
-            
-            $acl = $this->_getAcl();
-            $acl->acl->addRole($role);
-            $acl->saveAcl();
-            
-            return $this->redirect()->toRoute('backend' , array('controller' => 'role' , 'action' => 'index'));
+            $sql = "INSERT INTO sys_role (`Name`, `CnName`, `AddTime`) VALUES ('{$params->Name}', '{$params->CnName}', '".date('Y-m-d H:i:s')."')";
+            $roleTable->query($sql);
+            return new JsonModel(array('code' => 0, 'msg' => '保存成功！'));
         }
         
         $table = $this->_getRoleTable();
@@ -65,19 +46,11 @@ class RoleController extends AbstractController
     }
     
     function deleteAction(){
-        $name = $this->params()->fromQuery('name');
-        if($name){
-            $table = $this->_getRoleTable();
-            $table->deleteForName($name);
-            
-            $this->trigger(ActionEvent::ACTION_DELETE);
-            $acl = $this->_getAcl();
-            $acl->acl->removeRole($name);
-            $aclTable = $this->_getTable('AclTable');
-            $aclTable->removeAllAcl($name);
-        }
-        return $this->redirect()->toUrl('/role/index');
-//         return $this->redirect()->toRoute('backend' , array('controllter' => 'role' , 'action' => 'index'));
+    	$ids = $this->params()->fromPost('RoleID');
+    	$roleTable = new RoleTable();
+    	$sql = "DELETE FROM `sys_role` WHERE RoleID IN (".implode(',', $ids).")";
+    	$roleTable->query($sql);
+    	return new JsonModel(array('code' => 0, 'msg' => '删除成功！'));
     }
     
     private function _getRoleTable(){
