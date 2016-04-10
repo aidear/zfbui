@@ -1,5 +1,6 @@
 <div id="content" class="hide">
       <form id="J_Form" class="form-horizontal" method="post" action="<?php echo $this->url('admin' , array('controller' => 'role' , 'action' => 'save'));?>">
+      	<input name="RoleID" type="hidden" value="" />
         <div class="row">
           <div class="control-group span8">
             <label class="control-label"><s>*</s>角色名称</label>
@@ -17,6 +18,10 @@
           </div>
         </div>
       </form>
+</div>
+<div id="bind-content" class="hide">
+<select name="opt"><option value="add">添加资源</option><option value="del">删除资源</option></select>
+<span id="xx"></span>
 </div>
 <div id="grid" style="width:100%;"></div>
 <script>
@@ -39,14 +44,9 @@ BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
             {title : '已绑定资源',dataIndex :'resource'},
             {title : '添加时间',dataIndex :'AddTime'},
             {title : '操作',renderer : function(){
-              return '<span class="grid-command btn-edit">编辑</span>';
+              return '<span class="grid-command btn-edit">编辑</span><span class="grid-command btn-bind">绑定资源</span><span class="grid-command btn-del">删除</span>';
             }}
           ],
-      //默认的数据
-//       data = [
-//         {id:'1',school:'武汉第一初级中学',enter:'1999-09-01',type: 'zou',outter:'2002-07-01',memo:'表现优异，多次评为三好学生'},
-//         {id:'2',school:'武汉第一高级中学',enter:'2002-09-01',type: 'zou',outter:'2005-07-01',memo:'表现优异，多次评为三好学生'}
-//       ],
       store = new Data.Store({
         data:data
       }),
@@ -84,14 +84,59 @@ BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
                 }
 			}
         }
-      }),
+      }),bediting = new Grid.Plugins.DialogEditing({
+          contentId : 'bind-content',
+          triggerCls : 'btn-bind',
+          editor: {
+				content:function() {
+
+		        	var type = 'add';
+		    		var role = '1';
+		    		$.ajax({
+		    			type:'POST',
+		    			url:'/ajax/getResource',
+		    			data:{type : type, role : role},
+		    			dataType:'json',
+		    			cache:false,
+		    			success:function(s) {
+		    				if (s.code == 0) {
+		    					var html = '<table class="table">';
+		    					html += '<tr>';
+		    					html += '<th width=60>全选<input type="checkbox" name="sAll" value="0" /> </th><th>资源</th><th>控制器</th><th>动作</th>';
+		    					html += '</tr>';
+		    					s = s.data;
+		    					for (var i in s) {
+		    						html += '<tr>';
+		    						html += '<td><input type="checkbox" name="resourceItem" value="'+s[i].Name+'" />'+i+'</td>';
+		    						html += '<td>'+s[i].Name+'</td>';
+		    						html += '<td>'+s[i].ControllerName+'</td>';
+		    						html += '<td>'+s[i].ActionName+'</td>';
+		    						html += '</tr>';
+		    					}
+		    					html += '</table>';
+		    					$("#xx").html(html);
+		    					$("input[name='sAll']").bind('click', function(){
+		    						if ($(this).is(':checked')) {
+		    							$("input[name='resourceItem']", $("#resourceLists")).prop('checked', this.checked);
+		    						} else {
+		    							$("input[name='resourceItem']", $("#resourceLists")).removeAttr('checked');
+		    						}
+		    					})
+		    				} else {
+		    					alert(s.msg);
+		    				}
+		    			}
+		    		});
+				}
+          }
+        }),
       grid = new Grid.Grid({
         render : '#grid',
         columns : columns,
         width : gridW,
         forceFit : true,
         store : store,
-        plugins : [Grid.Plugins.CheckSelection,editing],
+        plugins : [Grid.Plugins.CheckSelection,editing, bediting],
         tbar:{
           items : [{
             btnCls : 'button button-small',
@@ -136,5 +181,18 @@ BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
       var records = store.getResult();
       logEl.text(BUI.JSON.stringify(records));
     });
+    grid.on('cellclick',function(ev){
+        var sender = $(ev.domTarget); //点击的Dom
+        var record = ev.record;
+        if(sender.hasClass('btn-del')){
+          BUI.Message.Confirm('确认要删除选中的记录么？',function(){
+        	  $.post('<?php echo $this->url('admin/default' , array('controller' => 'role' , 'action' => 'delete'));?>', {RoleID:record.RoleID}, function(s) {
+        			if (s.code == 0) {
+        				store.remove(record);
+        			}
+        		});
+         },'question');
+        }
+      });
   });
 </script>

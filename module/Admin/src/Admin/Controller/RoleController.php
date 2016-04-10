@@ -26,10 +26,14 @@ class RoleController extends AbstractController
             	return new JsonModel(array('code' => -1, 'msg' => '角色名不允许为空！'));
             }
             $roleTable = new RoleTable();
-            if ($roleTable->checkIsExist($params->Name)) {
+            if ($roleTable->checkIsExist($params->Name, $params->RoleID)) {
             	return new JsonModel(array('code' => -2, 'msg' => '角色名称重复，请更换其他名称！'));
             }
-            $sql = "INSERT INTO sys_role (`Name`, `CnName`, `AddTime`) VALUES ('{$params->Name}', '{$params->CnName}', '".date('Y-m-d H:i:s')."')";
+            if ($params->RoleID) {
+            	$sql = "UPDATE `sys_role` SET `Name` = '{$params->Name}', `CnName` = '{$params->CnName}' WHERE `RoleID`={$params->RoleID}";
+            } else {
+            	$sql = "INSERT INTO sys_role (`Name`, `CnName`, `AddTime`) VALUES ('{$params->Name}', '{$params->CnName}', '".date('Y-m-d H:i:s')."')";
+            }
             $roleTable->query($sql);
             return new JsonModel(array('code' => 0, 'msg' => '保存成功！'));
         }
@@ -48,7 +52,12 @@ class RoleController extends AbstractController
     function deleteAction(){
     	$ids = $this->params()->fromPost('RoleID');
     	$roleTable = new RoleTable();
-    	$sql = "DELETE FROM `sys_role` WHERE RoleID IN (".implode(',', $ids).")";
+    	if (is_array($ids)) {
+    		$sql = "DELETE FROM `sys_role` WHERE RoleID IN (".implode(',', $ids).")";
+    	} else {
+    		$sql = "DELETE FROM `sys_role` WHERE RoleID={$ids}";
+    	}
+    	
     	$roleTable->query($sql);
     	return new JsonModel(array('code' => 0, 'msg' => '删除成功！'));
     }
