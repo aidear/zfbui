@@ -21,21 +21,22 @@ class RoleController extends AbstractController
         $request = $this->getRequest();
                
         if($request->isPost()){
+        	$date = date('Y-m-d H:i:s');
             $params = $request->getPost();
-            if (trim($params->Name) == '') {
+            if (trim($params->name) == '') {
             	return new JsonModel(array('code' => -1, 'msg' => '角色名不允许为空！'));
             }
             $roleTable = new RoleTable();
-            if ($roleTable->checkIsExist($params->Name, $params->RoleID)) {
+            if ($roleTable->checkIsExist($params->name, $params->id)) {
             	return new JsonModel(array('code' => -2, 'msg' => '角色名称重复，请更换其他名称！'));
             }
-            if ($params->RoleID) {
-            	$sql = "UPDATE `sys_role` SET `Name` = '{$params->Name}', `CnName` = '{$params->CnName}' WHERE `RoleID`={$params->RoleID}";
+            if ($params->id) {
+            	$sql = "UPDATE `sys_role` SET `name` = '{$params->name}', `cn_name` = '{$params->cn_name}' WHERE `id`={$params->id}";
             } else {
-            	$sql = "INSERT INTO sys_role (`Name`, `CnName`, `AddTime`) VALUES ('{$params->Name}', '{$params->CnName}', '".date('Y-m-d H:i:s')."')";
+            	$sql = "INSERT INTO sys_role (`name`, `cn_name`, `add_time`) VALUES ('{$params->name}', '{$params->cn_name}', '".$date."')";
             }
             $roleTable->query($sql);
-            return new JsonModel(array('code' => 0, 'msg' => '保存成功！'));
+            return new JsonModel(array('code' => 0, 'msg' => '保存成功！', 'Data' => $params));
         }
         
         $table = $this->_getRoleTable();
@@ -50,12 +51,12 @@ class RoleController extends AbstractController
     }
     
     function deleteAction(){
-    	$ids = $this->params()->fromPost('RoleID');
+    	$ids = $this->params()->fromPost('id');
     	$roleTable = new RoleTable();
     	if (is_array($ids)) {
-    		$sql = "DELETE FROM `sys_role` WHERE RoleID IN (".implode(',', $ids).")";
+    		$sql = "DELETE FROM `sys_role` WHERE id IN (".implode(',', $ids).")";
     	} else {
-    		$sql = "DELETE FROM `sys_role` WHERE RoleID={$ids}";
+    		$sql = "DELETE FROM `sys_role` WHERE id={$ids}";
     	}
     	
     	$roleTable->query($sql);

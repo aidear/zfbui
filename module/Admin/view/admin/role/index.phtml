@@ -1,19 +1,19 @@
 <div id="content" class="hide">
       <form id="J_Form" class="form-horizontal" method="post" action="<?php echo $this->url('admin' , array('controller' => 'role' , 'action' => 'save'));?>">
-      	<input name="RoleID" type="hidden" value="" />
+      	<input name="id" type="hidden" value="" />
         <div class="row">
           <div class="control-group span8">
             <label class="control-label"><s>*</s>角色名称</label>
             <div class="controls">
-              <input name="Name" type="text" data-rules="{required:true}" class="input-normal control-text">
+              <input name="name" type="text" data-rules="{required:true}" class="input-normal control-text">
             </div>
           </div>
         </div>
         <div class="row">
           <div class="control-group span8">
-            <label class="control-label"><s>*</s>角色名称</label>
+            <label class="control-label"><s>*</s>角色别名</label>
             <div class="controls">
-              <input name="CnName" type="text" data-rules="{required:true}" class="input-normal control-text">
+              <input name="cn_name" type="text" data-rules="{required:true}" class="input-normal control-text">
             </div>
           </div>
         </div>
@@ -31,7 +31,7 @@ var data = [];
 <?php 
 $ResourceName = '';
         foreach ($role['resource'] as $k=>$v) {
-        	$ResourceName .= $v['ResourceName'].',';
+        	$ResourceName .= $v['resource_name'].',';
         }
         $role['resource'] = $ResourceName;
         ;?>
@@ -39,10 +39,10 @@ data.push(<?php echo json_encode($role)?>);
 <?php endforeach;?>
 BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
 
-    var columns = [{title : '角色',dataIndex :'Name'},
-            {title : '角色别名',dataIndex :'CnName'},
+    var columns = [{title : '角色',dataIndex :'name'},
+            {title : '角色别名',dataIndex :'cn_name'},
             {title : '已绑定资源',dataIndex :'resource'},
-            {title : '添加时间',dataIndex :'AddTime'},
+            {title : '添加时间',dataIndex :'add_time'},
             {title : '操作',renderer : function(){
               return '<span class="grid-command btn-edit">编辑</span><span class="grid-command btn-bind">绑定资源</span><span class="grid-command btn-del">删除</span>';
             }}
@@ -141,9 +141,10 @@ BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
           items : [{
             btnCls : 'button button-small',
             text : '<i class="icon-plus"></i>添加角色',
-            listeners : {
-              'click' : addFunction
-            }
+            handler:function(){addFunction();}
+//             listeners : {
+//               'click' : addFunction
+//             }
           },
           {
             btnCls : 'button button-small',
@@ -157,7 +158,9 @@ BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
       });
     grid.render();
     function addFunction(){
-    	var newData = {isNew : true}
+    	var myDate = new Date();
+        var add_time = '<?php echo date('Y-m-d H:i:s');?>';
+    	var newData = {isNew : true, add_time: add_time};
       editing.add(newData); //添加记录后，直接编辑
     }
 
@@ -166,9 +169,9 @@ BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
       if (selections.length) {
           var params = [];
           for (var i in selections) {
-			params.push(selections[i].RoleID);
+			params.push(selections[i].id);
           }
-		$.post('<?php echo $this->url('admin/default' , array('controller' => 'role' , 'action' => 'delete'));?>', {RoleID:params}, function(s) {
+		$.post('<?php echo $this->url('admin/default' , array('controller' => 'role' , 'action' => 'delete'));?>', {id:params}, function(s) {
 			if (s.code == 0) {
 				store.remove(selections);
 			}
@@ -186,7 +189,7 @@ BUI.use(['bui/grid','bui/data','bui/form'],function (Grid,Data, Form) {
         var record = ev.record;
         if(sender.hasClass('btn-del')){
           BUI.Message.Confirm('确认要删除选中的记录么？',function(){
-        	  $.post('<?php echo $this->url('admin/default' , array('controller' => 'role' , 'action' => 'delete'));?>', {RoleID:record.RoleID}, function(s) {
+        	  $.post('<?php echo $this->url('admin/default' , array('controller' => 'role' , 'action' => 'delete'));?>', {id:record.id}, function(s) {
         			if (s.code == 0) {
         				store.remove(record);
         			}
