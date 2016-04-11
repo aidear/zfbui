@@ -10,7 +10,7 @@ class AclTable extends DbTable
 
 	public function getSourceByRole($role) {
 		$select = $this->tableGateway->getSql()->select();
-		$select->where(array('RoleName' => $role));
+		$select->where(array('role_name' => $role));
 		$ret = $this->tableGateway->selectWith($select);
 		return $ret->toArray();
 	}

@@ -14,9 +14,9 @@ class RoleTable extends DbTable
 
 	public function checkIsExist($name, $roleID = null) {
 		$where = new Where();
-		$where->equalTo('Name', $name);
+		$where->equalTo('name', $name);
 		if ($roleID) {
-			$where->notEqualTo('RoleID', $roleID);
+			$where->notEqualTo('id', $roleID);
 		}
 		return $this->tableGateway->select($where)->count();
 	}
